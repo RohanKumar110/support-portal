@@ -15,7 +15,7 @@ public class HttpResponse {
     private Date timeStamp;
 
     public HttpResponse(){
-
+        this.timeStamp = new Date();
     }
 
     public HttpResponse(int httpStatusCode, HttpStatus httpStatus, String reason, String message) {

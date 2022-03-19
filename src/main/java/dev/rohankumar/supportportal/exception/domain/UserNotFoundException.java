@@ -1,4 +1,4 @@
-package dev.rohankumar.supportportal.exception;
+package dev.rohankumar.supportportal.exception.domain;
 
 public class UserNotFoundException extends RuntimeException{
 
