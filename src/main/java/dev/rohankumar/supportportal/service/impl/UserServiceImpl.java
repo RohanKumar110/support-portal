@@ -23,6 +23,8 @@ import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+
 import static dev.rohankumar.supportportal.constant.UserServiceConstant.*;
 import static dev.rohankumar.supportportal.enumeration.Role.ROLE_USER;
 
@@ -33,11 +35,15 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final Logger LOG;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final LoginAttemptService loginAttemptService;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository,PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder,
+                           LoginAttemptService loginAttemptService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.loginAttemptService = loginAttemptService;
         LOG = LoggerFactory.getLogger(UserServiceImpl.class);
     }
 
@@ -45,6 +51,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found by username: "+username));
+        validateLoginAttempt(user);
         user.setLastLoginDateDisplay(user.getLastLoginDate());
         user.setLastLoginDate(new Date());
         userRepository.save(user);
@@ -107,6 +114,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private String getTemporaryProfileImageUrl(){
         return ServletUriComponentsBuilder.fromCurrentContextPath().path(DEFAULT_USER_IMAGE_PATH).toUriString();
+    }
+
+    private void validateLoginAttempt(User user)  {
+        if(user.isNotLocked()){
+            user.setNotLocked(!loginAttemptService.hasExceededMaxAttempts(user.getUsername()));
+        }else{
+            loginAttemptService.evictUserFromLoginAttemptCache(user.getUsername());
+        }
     }
 
     private User validateNewUsernameAndEmail(String currentUsername,String newUsername, String email) {
