@@ -19,6 +19,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
@@ -33,15 +35,18 @@ import static dev.rohankumar.supportportal.enumeration.Role.ROLE_USER;
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final Logger LOG;
+    private EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final LoginAttemptService loginAttemptService;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
+                           EmailService emailService,
                            PasswordEncoder passwordEncoder,
                            LoginAttemptService loginAttemptService) {
         this.userRepository = userRepository;
+        this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.loginAttemptService = loginAttemptService;
         LOG = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -79,7 +84,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setAuthorities(ROLE_USER.getAuthorities());
         user.setProfileImageUrl(getTemporaryProfileImageUrl());
         User savedUser = userRepository.save(user);
-        LOG.info("New User Password {}",password);
+        emailService.sendNewPasswordEmail(firstName,password,email);
         return savedUser;
     }
 

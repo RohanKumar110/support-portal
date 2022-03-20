@@ -1,3 +1,7 @@
+jwt:
+  secret: 'ec1a78efca5d5b3c20a0ca0e1c868150924cfa900bf9357fd74b17755ea37db6'
+  expiration-time: '432000000'
+
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/supportportaldb
@@ -12,6 +16,5 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
-jwt:
-  secret: 'ec1a78efca5d5b3c20a0ca0e1c868150924cfa900bf9357fd74b17755ea37db6'
-  expiration-time: '432000000'
+  profiles:
+    active: dev
